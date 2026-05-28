@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\ComprehensiveReportService;
+use App\Services\CorrelationAnalysisService;
 use App\Services\StatsService;
 use App\Services\HealthAnalysisService;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,8 @@ class StatsController extends Controller
     public function __construct(
         private readonly StatsService $statsService,
         private readonly HealthAnalysisService $healthAnalysisService,
-        private readonly ComprehensiveReportService $comprehensiveReportService
+        private readonly ComprehensiveReportService $comprehensiveReportService,
+        private readonly CorrelationAnalysisService $correlationAnalysisService
     )
     {
     }
@@ -62,6 +64,11 @@ class StatsController extends Controller
     public function comprehensive(Request $request): JsonResponse
     {
         return $this->success($this->comprehensiveReportService->report($request->query('period', 'week')));
+    }
+
+    public function correlation(Request $request): JsonResponse
+    {
+        return $this->success($this->correlationAnalysisService->analysis($request->query('period', 'month')));
     }
 
     private function success(mixed $data = [], string $message = 'success'): JsonResponse

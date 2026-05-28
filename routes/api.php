@@ -18,4 +18,5 @@ Route::prefix('stats')->group(function () {
     Route::get('summary', [StatsController::class, 'summary']);
     Route::get('health', [StatsController::class, 'health']);
     Route::get('comprehensive', [StatsController::class, 'comprehensive']);
+    Route::get('correlation', [StatsController::class, 'correlation']);
 });
