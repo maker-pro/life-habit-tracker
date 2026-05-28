@@ -205,8 +205,8 @@ body {
 
 .analysis-chart-box {
     position: relative;
-    height: 360px;
-    min-height: 360px;
+    height: 720px;
+    min-height: 720px;
     width: 100%;
 }
 
@@ -232,13 +232,11 @@ body {
 }
 
 .chart-fullscreen-layer {
-    width: 100vw !important;
-    height: 100vh !important;
+    width: 80vw !important;
+    height: 80vh !important;
     max-width: none !important;
     max-height: none !important;
-    left: 0 !important;
-    top: 0 !important;
-    border-radius: 0 !important;
+    border-radius: 8px !important;
 }
 
 .chart-fullscreen-layer .layui-layer-title {
@@ -247,8 +245,8 @@ body {
 }
 
 .chart-fullscreen-layer .layui-layer-content {
-    width: 100vw !important;
-    height: calc(100vh - 43px) !important;
+    width: 80vw !important;
+    height: calc(80vh - 43px) !important;
     overflow: hidden !important;
 }
 
@@ -367,8 +365,8 @@ body.dark.login-page {
     }
 
     .analysis-chart-box {
-        height: 320px;
-        min-height: 320px;
+        height: 560px;
+        min-height: 560px;
     }
 
     .fullscreen-chart-box {

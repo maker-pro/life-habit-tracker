@@ -140,20 +140,20 @@ const chartOptions = {
     resizeDelay: 120,
     interaction: { mode: 'index', intersect: false },
     elements: {
-        point: { radius: 4, hoverRadius: 7 },
-        line: { borderWidth: 3 },
-        bar: { borderRadius: 6 }
+        point: { radius: 6, hoverRadius: 9 },
+        line: { borderWidth: 4 },
+        bar: { borderRadius: 8 }
     },
     plugins: {
         legend: {
             position: 'bottom',
-            labels: { boxWidth: 18, boxHeight: 18, padding: 18, font: { size: 14 } }
+            labels: { boxWidth: 24, boxHeight: 24, padding: 22, font: { size: 16 } }
         },
-        tooltip: { titleFont: { size: 15 }, bodyFont: { size: 14 }, padding: 12 }
+        tooltip: { titleFont: { size: 17 }, bodyFont: { size: 16 }, padding: 14 }
     },
     scales: {
-        x: { ticks: { font: { size: 13 } } },
-        y: { ticks: { font: { size: 13 } } }
+        x: { ticks: { font: { size: 15 } } },
+        y: { ticks: { font: { size: 15 } } }
     }
 };
 
@@ -221,16 +221,15 @@ layui.use(['layer'], function () {
                 type: 1,
                 title: config.title,
                 skin: 'chart-fullscreen-layer',
-                area: ['100vw', '100vh'],
-                offset: '0',
+                area: ['80vw', '80vh'],
                 maxmin: true,
                 shadeClose: true,
                 content: '<div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div>',
                 success: function (layero) {
                     const content = layero.find('.layui-layer-content')[0];
                     const chartBox = layero.find('.fullscreen-chart-box')[0];
-                    content.style.width = '100vw';
-                    content.style.height = 'calc(100vh - 43px)';
+                    content.style.width = '80vw';
+                    content.style.height = 'calc(80vh - 43px)';
                     content.style.overflow = 'hidden';
                     chartBox.style.width = '100%';
                     chartBox.style.height = '100%';
