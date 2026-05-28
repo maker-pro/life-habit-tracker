@@ -22,4 +22,16 @@ class AnalysisController extends Controller
             'period' => $period,
         ]);
     }
+
+    public function topic(Request $request, string $topic)
+    {
+        abort_unless(in_array($topic, ['sleep', 'commute', 'time', 'body'], true), 404);
+
+        $period = $request->query('period', 'month');
+
+        return view('admin.analysis.topic', [
+            'topic' => $this->healthAnalysisService->topic($topic, $period),
+            'period' => $period,
+        ]);
+    }
 }

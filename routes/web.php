@@ -23,6 +23,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('checkins', CheckinController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
         Route::get('analysis', [AnalysisController::class, 'index'])->name('analysis.index');
+        Route::get('analysis/{topic}', [AnalysisController::class, 'topic'])->name('analysis.topic');
         Route::get('reports/timeline', [ReportController::class, 'timeline'])->name('reports.timeline');
         Route::get('reports/calendar', [ReportController::class, 'calendar'])->name('reports.calendar');
     });

@@ -127,6 +127,21 @@ class HealthAnalysisService
         ];
     }
 
+    public function topic(string $topic, ?string $period = 'month'): array
+    {
+        $end = Carbon::today();
+        $start = $period === 'week' ? $end->copy()->subDays(6) : $end->copy()->subDays(29);
+        $reports = $this->reports($start, $end);
+
+        return match ($topic) {
+            'sleep' => $this->sleepTopic($reports, $start, $end),
+            'commute' => $this->commuteTopic($reports, $start, $end),
+            'time' => $this->timeTopic($reports, $start, $end),
+            'body' => $this->bodyTopic($reports, $start, $end),
+            default => $this->sleepTopic($reports, $start, $end),
+        };
+    }
+
     private function reports(Carbon $start, Carbon $end): Collection
     {
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
@@ -137,6 +152,207 @@ class HealthAnalysisService
             ->whereDate('report_date', '<=', $end->toDateString())
             ->orderBy('report_date')
             ->get();
+    }
+
+    private function sleepTopic(Collection $reports, Carbon $start, Carbon $end): array
+    {
+        $avgSleep = round(($reports->avg('sleep_minutes') ?: 0) / 60, 1);
+        $avgAwake = round(($reports->avg('awake_minutes') ?: 0) / 60, 1);
+
+        return [
+            'key' => 'sleep',
+            'title' => '睡眠分析',
+            'desc' => '查看起床、睡觉、睡眠时长和清醒时长的变化',
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
+            'cards' => [
+                ['label' => '平均睡眠', 'value' => $avgSleep, 'unit' => '小时'],
+                ['label' => '平均清醒', 'value' => $avgAwake, 'unit' => '小时'],
+                ['label' => '最高健康评分', 'value' => (int) ($reports->max('health_score') ?: 0), 'unit' => '分'],
+                ['label' => '记录天数', 'value' => $reports->count(), 'unit' => '天'],
+            ],
+            'summary' => "本周期平均睡眠 {$avgSleep} 小时，平均清醒 {$avgAwake} 小时。睡眠不足或睡觉时间波动较大时，个人状态可能更容易下降。",
+            'charts' => [
+                [
+                    'id' => 'sleepHoursChart',
+                    'title' => '睡眠 / 清醒时长',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff'],
+                        ['label' => '清醒小时', 'data' => $reports->pluck('awake_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#16baaa'],
+                    ],
+                ],
+                [
+                    'id' => 'sleepTimeChart',
+                    'title' => '起床 / 睡觉时间',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800'],
+                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056'],
+                    ],
+                ],
+            ],
+            'rows' => $reports->map(fn (DailyHealthReport $report) => [
+                'date' => $report->report_date->toDateString(),
+                'main' => '睡眠 '.round($report->sleep_minutes / 60, 1).' 小时',
+                'sub' => '起床 '.substr((string) $report->wake_time, 0, 5).'，睡觉 '.substr((string) $report->sleep_time, 0, 5),
+                'impact' => '健康评分 '.$report->health_score.'，睡眠质量 '.($report->metrics['sleep_quality'] ?? '-'),
+                'note' => $report->analysis_text,
+            ])->values(),
+        ];
+    }
+
+    private function commuteTopic(Collection $reports, Carbon $start, Carbon $end): array
+    {
+        $avg = round($reports->avg('commute_minutes') ?: 0, 1);
+        $max = (int) ($reports->max('commute_minutes') ?: 0);
+
+        return [
+            'key' => 'commute',
+            'title' => '通勤分析',
+            'desc' => '查看每天上班、下班通勤时长和异常备注',
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
+            'cards' => [
+                ['label' => '平均通勤', 'value' => $avg, 'unit' => '分钟'],
+                ['label' => '最长通勤', 'value' => $max, 'unit' => '分钟'],
+                ['label' => '总通勤', 'value' => (int) $reports->sum('commute_minutes'), 'unit' => '分钟'],
+                ['label' => '高压天数', 'value' => $reports->where('commute_minutes', '>', 90)->count(), 'unit' => '天'],
+            ],
+            'summary' => "本周期平均通勤 {$avg} 分钟。通勤超过 90 分钟的日期建议结合备注查看是否由天气、堵车或临时事件导致。",
+            'charts' => [
+                [
+                    'id' => 'commuteMinutesChart',
+                    'title' => '每日通勤分钟数',
+                    'type' => 'bar',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '通勤分钟', 'data' => $reports->pluck('commute_minutes')->values(), 'color' => '#ffb800'],
+                    ],
+                ],
+                [
+                    'id' => 'commuteHealthChart',
+                    'title' => '通勤与健康评分',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '通勤分钟', 'data' => $reports->pluck('commute_minutes')->values(), 'color' => '#ffb800'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa'],
+                    ],
+                ],
+            ],
+            'rows' => $reports->map(fn (DailyHealthReport $report) => [
+                'date' => $report->report_date->toDateString(),
+                'main' => '通勤 '.$report->commute_minutes.' 分钟',
+                'sub' => $report->commute_minutes > 90 ? '通勤偏长' : '通勤正常',
+                'impact' => '健康评分 '.$report->health_score,
+                'note' => collect($report->metrics['notes'] ?? [])->implode('；') ?: '-',
+            ])->values(),
+        ];
+    }
+
+    private function timeTopic(Collection $reports, Carbon $start, Carbon $end): array
+    {
+        $awake = (int) $reports->sum('awake_minutes');
+
+        return [
+            'key' => 'time',
+            'title' => '学习运动游戏分析',
+            'desc' => '查看学习、运动、游戏在清醒时间中的占比',
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
+            'cards' => [
+                ['label' => '学习占比', 'value' => $this->ratio((int) $reports->sum('study_minutes'), $awake), 'unit' => '%'],
+                ['label' => '运动占比', 'value' => $this->ratio((int) $reports->sum('exercise_minutes'), $awake), 'unit' => '%'],
+                ['label' => '游戏占比', 'value' => $this->ratio((int) $reports->sum('game_minutes'), $awake), 'unit' => '%'],
+                ['label' => '清醒总时长', 'value' => round($awake / 60, 1), 'unit' => '小时'],
+            ],
+            'summary' => '本页用于观察学习、运动、游戏如何占用清醒时间。运动时间增加通常对状态有正向帮助，游戏过长可能挤压睡眠和恢复时间。',
+            'charts' => [
+                [
+                    'id' => 'timeStackChart',
+                    'title' => '学习 / 运动 / 游戏每日时长',
+                    'type' => 'bar',
+                    'stacked' => true,
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '学习', 'data' => $reports->pluck('study_minutes')->values(), 'color' => '#5fb878'],
+                        ['label' => '运动', 'data' => $reports->pluck('exercise_minutes')->values(), 'color' => '#ff5722'],
+                        ['label' => '游戏', 'data' => $reports->pluck('game_minutes')->values(), 'color' => '#a233c6'],
+                    ],
+                ],
+                [
+                    'id' => 'timeHealthChart',
+                    'title' => '运动 / 游戏与健康评分',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '运动分钟', 'data' => $reports->pluck('exercise_minutes')->values(), 'color' => '#ff5722'],
+                        ['label' => '游戏分钟', 'data' => $reports->pluck('game_minutes')->values(), 'color' => '#a233c6'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa'],
+                    ],
+                ],
+            ],
+            'rows' => $reports->map(fn (DailyHealthReport $report) => [
+                'date' => $report->report_date->toDateString(),
+                'main' => "学习 {$report->study_minutes} / 运动 {$report->exercise_minutes} / 游戏 {$report->game_minutes} 分钟",
+                'sub' => '清醒 '.round($report->awake_minutes / 60, 1).' 小时',
+                'impact' => "学习占比 {$this->ratio($report->study_minutes, $report->awake_minutes)}%，运动占比 {$this->ratio($report->exercise_minutes, $report->awake_minutes)}%，游戏占比 {$this->ratio($report->game_minutes, $report->awake_minutes)}%",
+                'note' => $report->analysis_text,
+            ])->values(),
+        ];
+    }
+
+    private function bodyTopic(Collection $reports, Carbon $start, Carbon $end): array
+    {
+        $weights = $reports->pluck('weight')->filter();
+        $moods = $reports->pluck('mood_score')->filter();
+
+        return [
+            'key' => 'body',
+            'title' => '体重状态分析',
+            'desc' => '查看体重、个人状态评分与健康评分的变化',
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
+            'cards' => [
+                ['label' => '平均体重', 'value' => $weights->isEmpty() ? '-' : round($weights->avg(), 1), 'unit' => $weights->isEmpty() ? '' : 'kg'],
+                ['label' => '平均状态', 'value' => $moods->isEmpty() ? '-' : round($moods->avg(), 1), 'unit' => $moods->isEmpty() ? '' : '分'],
+                ['label' => '平均健康评分', 'value' => round($reports->avg('health_score') ?: 0, 1), 'unit' => '分'],
+                ['label' => '状态记录', 'value' => $moods->count(), 'unit' => '天'],
+            ],
+            'summary' => '本页用于观察体重和个人状态评分趋势，并结合睡眠、运动、游戏、通勤形成健康评分变化。',
+            'charts' => [
+                [
+                    'id' => 'weightMoodChart',
+                    'title' => '体重 / 状态评分',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '体重', 'data' => $reports->pluck('weight')->values(), 'color' => '#009688'],
+                        ['label' => '状态评分', 'data' => $reports->pluck('mood_score')->values(), 'color' => '#e91e63'],
+                    ],
+                ],
+                [
+                    'id' => 'bodyHealthChart',
+                    'title' => '状态评分 / 健康评分',
+                    'type' => 'line',
+                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'datasets' => [
+                        ['label' => '状态评分', 'data' => $reports->pluck('mood_score')->values(), 'color' => '#e91e63'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa'],
+                    ],
+                ],
+            ],
+            'rows' => $reports->map(fn (DailyHealthReport $report) => [
+                'date' => $report->report_date->toDateString(),
+                'main' => '体重 '.($report->weight ? $report->weight.'kg' : '-').'，状态 '.($report->mood_level ?: '-'),
+                'sub' => $report->mood_score ? '状态评分 '.$report->mood_score.' 分' : '未记录状态评分',
+                'impact' => '健康评分 '.$report->health_score,
+                'note' => collect($report->metrics['notes'] ?? [])->implode('；') ?: '-',
+            ])->values(),
+        ];
     }
 
     private function firstTime(Collection $checkins, array $types, string $default): string
@@ -184,6 +400,15 @@ class HealthAnalysisService
         }
 
         return $startTime->diffInMinutes($endTime);
+    }
+
+    private function timeToHour(string $time): ?float
+    {
+        if (! preg_match('/^(\d{2}):(\d{2})/', $time, $matches)) {
+            return null;
+        }
+
+        return round(((int) $matches[1]) + ((int) $matches[2]) / 60, 2);
     }
 
     private function ratio(int $part, int $total): float
