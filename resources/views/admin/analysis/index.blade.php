@@ -4,7 +4,65 @@
 @section('page_title', '健康分析')
 @section('page_desc', '结合睡眠、通勤、学习、运动、游戏、体重和个人状态分析生活习惯影响')
 
+@section('head')
+<style>
+    .analysis-page .analysis-chart-box {
+        height: 520px !important;
+        min-height: 520px !important;
+    }
+
+    .analysis-page .analysis-chart-box canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .chart-fullscreen-layer {
+        width: 100vw !important;
+        height: 100vh !important;
+        left: 0 !important;
+        top: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .chart-fullscreen-layer .layui-layer-content {
+        width: 100vw !important;
+        height: calc(100vh - 43px) !important;
+        overflow: hidden !important;
+    }
+
+    .chart-fullscreen-stage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: 18px;
+    }
+
+    .chart-fullscreen-stage .fullscreen-chart-box {
+        width: 80vw !important;
+        height: 80vh !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    @media (max-width: 900px) {
+        .analysis-page .analysis-chart-box {
+            height: 420px !important;
+            min-height: 420px !important;
+        }
+
+        .chart-fullscreen-stage .fullscreen-chart-box {
+            width: 92vw !important;
+            height: 76vh !important;
+        }
+    }
+</style>
+@endsection
+
 @section('content')
+<div class="analysis-page">
 @php
     $today = $overview['today'];
     $weekly = $overview['weekly'];
@@ -129,6 +187,7 @@
         </div>
     </div>
 </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -203,10 +262,24 @@ const chartConfigs = {
     }
 };
 
-new Chart(document.getElementById('sleepChart'), chartConfigs.sleep);
-new Chart(document.getElementById('commuteChart'), chartConfigs.commute);
-new Chart(document.getElementById('timeChart'), chartConfigs.time);
-new Chart(document.getElementById('bodyChart'), chartConfigs.body);
+mountChart('sleepChart', chartConfigs.sleep);
+mountChart('commuteChart', chartConfigs.commute);
+mountChart('timeChart', chartConfigs.time);
+mountChart('bodyChart', chartConfigs.body);
+
+function mountChart(canvasId, config) {
+    const canvas = document.getElementById(canvasId);
+    const chart = new Chart(canvas, config);
+
+    setTimeout(function () {
+        const box = canvas.closest('.analysis-chart-box');
+        if (box) {
+            chart.resize(box.clientWidth, box.clientHeight);
+        }
+    }, 160);
+
+    return chart;
+}
 
 layui.use(['layer'], function () {
     const layer = layui.layer;
@@ -221,18 +294,19 @@ layui.use(['layer'], function () {
                 type: 1,
                 title: config.title,
                 skin: 'chart-fullscreen-layer',
-                area: ['80vw', '80vh'],
+                area: ['100vw', '100vh'],
+                offset: '0',
                 maxmin: true,
                 shadeClose: true,
-                content: '<div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div>',
+                content: '<div class="chart-fullscreen-stage"><div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div></div>',
                 success: function (layero) {
                     const content = layero.find('.layui-layer-content')[0];
                     const chartBox = layero.find('.fullscreen-chart-box')[0];
-                    content.style.width = '80vw';
-                    content.style.height = 'calc(80vh - 43px)';
+                    content.style.width = '100vw';
+                    content.style.height = 'calc(100vh - 43px)';
                     content.style.overflow = 'hidden';
-                    chartBox.style.width = '100%';
-                    chartBox.style.height = '100%';
+                    chartBox.style.width = Math.round(window.innerWidth * 0.8) + 'px';
+                    chartBox.style.height = Math.round(window.innerHeight * 0.8) + 'px';
 
                     requestAnimationFrame(function () {
                         const chart = new Chart(document.getElementById(canvasId), {
