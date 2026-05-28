@@ -223,27 +223,39 @@ layui.use(['layer'], function () {
                 area: ['96vw', '92vh'],
                 maxmin: true,
                 content: '<div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div>',
-                success: function () {
-                    new Chart(document.getElementById(canvasId), {
-                        type: config.type,
-                        data: config.data,
-                        options: {
-                            ...config.options,
-                            elements: {
-                                point: { radius: 6, hoverRadius: 10 },
-                                line: { borderWidth: 4 },
-                                bar: { borderRadius: 8 }
-                            },
-                            plugins: {
-                                ...config.options.plugins,
-                                legend: {
-                                    position: 'bottom',
-                                    labels: { boxWidth: 24, boxHeight: 24, padding: 24, font: { size: 16 } }
+                success: function (layero) {
+                    const content = layero.find('.layui-layer-content')[0];
+                    const chartBox = layero.find('.fullscreen-chart-box')[0];
+                    content.style.height = 'calc(92vh - 51px)';
+                    content.style.overflow = 'hidden';
+                    chartBox.style.height = 'calc(92vh - 86px)';
+
+                    requestAnimationFrame(function () {
+                        const chart = new Chart(document.getElementById(canvasId), {
+                            type: config.type,
+                            data: config.data,
+                            options: {
+                                ...config.options,
+                                maintainAspectRatio: false,
+                                elements: {
+                                    point: { radius: 6, hoverRadius: 10 },
+                                    line: { borderWidth: 4 },
+                                    bar: { borderRadius: 8 }
                                 },
-                                tooltip: { titleFont: { size: 17 }, bodyFont: { size: 16 }, padding: 14 }
-                            },
-                            scales: enlargeScales(config.options.scales || {})
-                        }
+                                plugins: {
+                                    ...config.options.plugins,
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: { boxWidth: 24, boxHeight: 24, padding: 24, font: { size: 16 } }
+                                    },
+                                    tooltip: { titleFont: { size: 17 }, bodyFont: { size: 16 }, padding: 14 }
+                                },
+                                scales: enlargeScales(config.options.scales || {})
+                            }
+                        });
+                        setTimeout(function () {
+                            chart.resize();
+                        }, 80);
                     });
                 }
             });

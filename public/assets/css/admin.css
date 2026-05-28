@@ -219,7 +219,7 @@ body {
 .fullscreen-chart-box {
     position: relative;
     height: calc(92vh - 86px);
-    min-height: 520px;
+    min-height: 680px;
     padding: 18px;
     box-sizing: border-box;
 }
@@ -351,6 +351,6 @@ body.dark.login-page {
 
     .fullscreen-chart-box {
         height: calc(92vh - 74px);
-        min-height: 360px;
+        min-height: 520px;
     }
 }
