@@ -53,7 +53,10 @@
 <div class="layui-row layui-col-space15">
     <div class="layui-col-md6">
         <div class="layui-card">
-            <div class="layui-card-header">睡眠与健康评分趋势</div>
+            <div class="layui-card-header chart-card-header">
+                <span>睡眠与健康评分趋势</span>
+                <button class="layui-btn layui-btn-primary layui-btn-sm js-chart-fullscreen" type="button" data-chart="sleep"><i class="layui-icon layui-icon-screen-full"></i> 放大</button>
+            </div>
             <div class="layui-card-body">
                 <div class="analysis-chart-box"><canvas id="sleepChart"></canvas></div>
             </div>
@@ -61,7 +64,10 @@
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
-            <div class="layui-card-header">通勤时间趋势</div>
+            <div class="layui-card-header chart-card-header">
+                <span>通勤时间趋势</span>
+                <button class="layui-btn layui-btn-primary layui-btn-sm js-chart-fullscreen" type="button" data-chart="commute"><i class="layui-icon layui-icon-screen-full"></i> 放大</button>
+            </div>
             <div class="layui-card-body">
                 <div class="analysis-chart-box"><canvas id="commuteChart"></canvas></div>
             </div>
@@ -69,7 +75,10 @@
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
-            <div class="layui-card-header">学习 / 运动 / 游戏时间</div>
+            <div class="layui-card-header chart-card-header">
+                <span>学习 / 运动 / 游戏时间</span>
+                <button class="layui-btn layui-btn-primary layui-btn-sm js-chart-fullscreen" type="button" data-chart="time"><i class="layui-icon layui-icon-screen-full"></i> 放大</button>
+            </div>
             <div class="layui-card-body">
                 <div class="analysis-chart-box"><canvas id="timeChart"></canvas></div>
             </div>
@@ -77,7 +86,10 @@
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
-            <div class="layui-card-header">体重与状态评分</div>
+            <div class="layui-card-header chart-card-header">
+                <span>体重与状态评分</span>
+                <button class="layui-btn layui-btn-primary layui-btn-sm js-chart-fullscreen" type="button" data-chart="body"><i class="layui-icon layui-icon-screen-full"></i> 放大</button>
+            </div>
             <div class="layui-card-body">
                 <div class="analysis-chart-box"><canvas id="bodyChart"></canvas></div>
             </div>
@@ -127,50 +139,127 @@ const chartOptions = {
     maintainAspectRatio: false,
     resizeDelay: 120,
     interaction: { mode: 'index', intersect: false },
-    plugins: { legend: { position: 'bottom' } }
+    elements: {
+        point: { radius: 4, hoverRadius: 7 },
+        line: { borderWidth: 3 },
+        bar: { borderRadius: 6 }
+    },
+    plugins: {
+        legend: {
+            position: 'bottom',
+            labels: { boxWidth: 18, boxHeight: 18, padding: 18, font: { size: 14 } }
+        },
+        tooltip: { titleFont: { size: 15 }, bodyFont: { size: 14 }, padding: 12 }
+    },
+    scales: {
+        x: { ticks: { font: { size: 13 } } },
+        y: { ticks: { font: { size: 13 } } }
+    }
 };
 
-new Chart(document.getElementById('sleepChart'), {
-    type: 'line',
-    data: {
-        labels: chartData.labels,
-        datasets: [
-            { label: '睡眠小时', data: chartData.sleep, borderColor: '#1e9fff', tension: .35 },
-            { label: '健康评分', data: chartData.health, borderColor: '#16baaa', tension: .35, yAxisID: 'score' }
-        ]
+const chartConfigs = {
+    sleep: {
+        title: '睡眠与健康评分趋势',
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                { label: '睡眠小时', data: chartData.sleep, borderColor: '#1e9fff', backgroundColor: 'rgba(30,159,255,.12)', tension: .35 },
+                { label: '健康评分', data: chartData.health, borderColor: '#16baaa', backgroundColor: 'rgba(22,186,170,.12)', tension: .35, yAxisID: 'score' }
+            ]
+        },
+        options: { ...chartOptions, scales: { ...chartOptions.scales, score: { position: 'right', min: 0, max: 100, ticks: { font: { size: 13 } } } } }
     },
-    options: { ...chartOptions, scales: { score: { position: 'right', min: 0, max: 100 } } }
+    commute: {
+        title: '通勤时间趋势',
+        type: 'bar',
+        data: { labels: chartData.labels, datasets: [{ label: '通勤分钟', data: chartData.commute, backgroundColor: '#ffb800' }] },
+        options: chartOptions
+    },
+    time: {
+        title: '学习 / 运动 / 游戏时间',
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                { label: '学习', data: chartData.study, backgroundColor: '#5fb878' },
+                { label: '运动', data: chartData.exercise, backgroundColor: '#ff5722' },
+                { label: '游戏', data: chartData.game, backgroundColor: '#a233c6' }
+            ]
+        },
+        options: { ...chartOptions, scales: { x: { ...chartOptions.scales.x, stacked: true }, y: { ...chartOptions.scales.y, stacked: true } } }
+    },
+    body: {
+        title: '体重与状态评分',
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                { label: '体重', data: chartData.weight, borderColor: '#009688', backgroundColor: 'rgba(0,150,136,.12)', tension: .35 },
+                { label: '状态评分', data: chartData.mood, borderColor: '#e91e63', backgroundColor: 'rgba(233,30,99,.12)', tension: .35, yAxisID: 'score' }
+            ]
+        },
+        options: { ...chartOptions, scales: { ...chartOptions.scales, score: { position: 'right', min: 1, max: 5, ticks: { font: { size: 13 } } } } }
+    }
+};
+
+new Chart(document.getElementById('sleepChart'), chartConfigs.sleep);
+new Chart(document.getElementById('commuteChart'), chartConfigs.commute);
+new Chart(document.getElementById('timeChart'), chartConfigs.time);
+new Chart(document.getElementById('bodyChart'), chartConfigs.body);
+
+layui.use(['layer'], function () {
+    const layer = layui.layer;
+
+    document.querySelectorAll('.js-chart-fullscreen').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const key = button.dataset.chart;
+            const config = chartConfigs[key];
+            const canvasId = 'fullscreenChart' + Date.now();
+
+            layer.open({
+                type: 1,
+                title: config.title,
+                area: ['96vw', '92vh'],
+                maxmin: true,
+                content: '<div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div>',
+                success: function () {
+                    new Chart(document.getElementById(canvasId), {
+                        type: config.type,
+                        data: config.data,
+                        options: {
+                            ...config.options,
+                            elements: {
+                                point: { radius: 6, hoverRadius: 10 },
+                                line: { borderWidth: 4 },
+                                bar: { borderRadius: 8 }
+                            },
+                            plugins: {
+                                ...config.options.plugins,
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { boxWidth: 24, boxHeight: 24, padding: 24, font: { size: 16 } }
+                                },
+                                tooltip: { titleFont: { size: 17 }, bodyFont: { size: 16 }, padding: 14 }
+                            },
+                            scales: enlargeScales(config.options.scales || {})
+                        }
+                    });
+                }
+            });
+        });
+    });
 });
 
-new Chart(document.getElementById('commuteChart'), {
-    type: 'bar',
-    data: { labels: chartData.labels, datasets: [{ label: '通勤分钟', data: chartData.commute, backgroundColor: '#ffb800' }] },
-    options: chartOptions
-});
-
-new Chart(document.getElementById('timeChart'), {
-    type: 'bar',
-    data: {
-        labels: chartData.labels,
-        datasets: [
-            { label: '学习', data: chartData.study, backgroundColor: '#5fb878' },
-            { label: '运动', data: chartData.exercise, backgroundColor: '#ff5722' },
-            { label: '游戏', data: chartData.game, backgroundColor: '#a233c6' }
-        ]
-    },
-    options: { ...chartOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
-});
-
-new Chart(document.getElementById('bodyChart'), {
-    type: 'line',
-    data: {
-        labels: chartData.labels,
-        datasets: [
-            { label: '体重', data: chartData.weight, borderColor: '#009688', tension: .35 },
-            { label: '状态评分', data: chartData.mood, borderColor: '#e91e63', tension: .35, yAxisID: 'score' }
-        ]
-    },
-    options: { ...chartOptions, scales: { score: { position: 'right', min: 1, max: 5 } } }
-});
+function enlargeScales(scales) {
+    const result = {};
+    Object.keys(scales).forEach(function (key) {
+        result[key] = {
+            ...scales[key],
+            ticks: { ...(scales[key].ticks || {}), font: { size: 15 } }
+        };
+    });
+    return result;
+}
 </script>
 @endsection

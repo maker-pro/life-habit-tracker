@@ -186,14 +186,45 @@ body {
     height: 320px;
 }
 
+.chart-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.chart-card-header .layui-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chart-card-header .layui-icon {
+    font-size: 15px;
+}
+
 .analysis-chart-box {
     position: relative;
-    height: 300px;
-    min-height: 300px;
+    height: 360px;
+    min-height: 360px;
     width: 100%;
 }
 
 .analysis-chart-box canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.fullscreen-chart-box {
+    position: relative;
+    height: calc(92vh - 86px);
+    min-height: 520px;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.fullscreen-chart-box canvas {
     display: block;
     width: 100% !important;
     height: 100% !important;
@@ -314,7 +345,12 @@ body.dark.login-page {
     }
 
     .analysis-chart-box {
-        height: 260px;
-        min-height: 260px;
+        height: 320px;
+        min-height: 320px;
+    }
+
+    .fullscreen-chart-box {
+        height: calc(92vh - 74px);
+        min-height: 360px;
     }
 }
