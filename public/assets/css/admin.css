@@ -298,6 +298,15 @@ body {
     padding: 22px 22px 8px;
 }
 
+.table-pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
 .login-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #eef7f4 0%, #f7f2ea 48%, #edf1f8 100%);

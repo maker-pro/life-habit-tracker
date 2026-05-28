@@ -37,6 +37,7 @@
                     <td>{{ $habit->is_daily ? '是' : '否' }}</td>
                     <td><span class="layui-badge {{ $habit->status ? 'layui-bg-green' : '' }}">{{ $habit->status ? '启用' : '停用' }}</span></td>
                     <td>
+                        <a class="layui-btn layui-btn-normal layui-btn-xs" href="{{ route('admin.habits.show', $habit) }}">记录</a>
                         <a class="layui-btn layui-btn-xs" href="{{ route('admin.habits.edit', $habit) }}">编辑</a>
                         <form class="inline-form js-delete-form" method="POST" action="{{ route('admin.habits.destroy', $habit) }}">
                             @csrf

@@ -19,7 +19,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('habits', HabitController::class)->except(['show']);
+        Route::resource('habits', HabitController::class);
         Route::resource('checkins', CheckinController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
         Route::get('analysis', [AnalysisController::class, 'index'])->name('analysis.index');
