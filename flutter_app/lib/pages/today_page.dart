@@ -15,6 +15,7 @@ class _TodayPageState extends State<TodayPage> {
   late Future<_TodayData> future = _loadData();
   final Set<int> _checkedHabitIds = {};
   final Set<int> _checkingHabitIds = {};
+  final Map<int, Map<String, dynamic>> _checkinsByHabitId = {};
 
   Future<_TodayData> _loadData() async {
     final today = _date(DateTime.now());
@@ -24,14 +25,24 @@ class _TodayPageState extends State<TodayPage> {
     ]);
     final habits = results[0] as List<Habit>;
     final checkins = results[1];
+    _checkinsByHabitId.clear();
+    for (final item in checkins) {
+      final map = item as Map<String, dynamic>;
+      _checkinsByHabitId[map['habit_id'] as int] = map;
+    }
     _checkedHabitIds
       ..clear()
-      ..addAll(checkins.map((item) => item['habit_id'] as int));
+      ..addAll(
+        habits
+            .where((habit) => _isCompleted(habit, _checkinsByHabitId[habit.id]))
+            .map((habit) => habit.id),
+      );
     return _TodayData(habits: habits);
   }
 
   Future<void> _openCheckinSheet(Habit habit) async {
-    if (_checkedHabitIds.contains(habit.id) || _checkingHabitIds.contains(habit.id)) {
+    final existingCheckin = _checkinsByHabitId[habit.id];
+    if (_isCompleted(habit, existingCheckin) || _checkingHabitIds.contains(habit.id)) {
       return;
     }
 
@@ -41,7 +52,7 @@ class _TodayPageState extends State<TodayPage> {
       useSafeArea: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (context) => _CheckinSheet(habit: habit),
+      builder: (context) => _CheckinSheet(habit: habit, existingCheckin: existingCheckin),
     );
     if (payload == null) return;
 
@@ -59,8 +70,10 @@ class _TodayPageState extends State<TodayPage> {
         moodScore: payload.moodScore,
       );
       if (!mounted) return;
-      setState(() => _checkedHabitIds.add(habit.id));
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${habit.name} 打卡成功')));
+      setState(() {
+        future = _loadData();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_successMessage(habit, payload))));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('打卡失败：$error')));
@@ -91,8 +104,10 @@ class _TodayPageState extends State<TodayPage> {
             itemBuilder: (context, index) {
               final habit = habits[index];
               final color = habitColor(habit.color);
-              final isChecked = _checkedHabitIds.contains(habit.id);
+              final existingCheckin = _checkinsByHabitId[habit.id];
+              final isChecked = _isCompleted(habit, existingCheckin);
               final isChecking = _checkingHabitIds.contains(habit.id);
+              final actionLabel = _actionLabel(habit, existingCheckin, isChecking);
               return Card(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -101,11 +116,11 @@ class _TodayPageState extends State<TodayPage> {
                     child: Icon(habitIcon(habit.icon, habit.name), color: color),
                   ),
                   title: Text(habit.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(_subtitle(habit)),
+                  subtitle: Text(_subtitle(habit, existingCheckin)),
                   trailing: FilledButton.icon(
                     onPressed: isChecked || isChecking ? null : () => _openCheckinSheet(habit),
-                    icon: Icon(isChecked ? Icons.check_circle : Icons.add_task),
-                    label: Text(isChecked ? '已打卡' : (isChecking ? '提交中' : '打卡')),
+                    icon: Icon(isChecked ? Icons.check_circle : (habit.habitType == 'commute' ? Icons.directions : Icons.add_task)),
+                    label: Text(actionLabel),
                   ),
                 ),
               );
@@ -118,7 +133,33 @@ class _TodayPageState extends State<TodayPage> {
     );
   }
 
-  String _subtitle(Habit habit) {
+  bool _isCompleted(Habit habit, Map<String, dynamic>? checkin) {
+    if (checkin == null) return false;
+    if (habit.habitType == 'commute') {
+      return checkin['start_time'] != null && checkin['end_time'] != null;
+    }
+    return true;
+  }
+
+  String _actionLabel(Habit habit, Map<String, dynamic>? checkin, bool isChecking) {
+    if (isChecking) return '提交中';
+    if (habit.habitType == 'commute') {
+      if (checkin?['start_time'] != null && checkin?['end_time'] == null) return '到达';
+      if (checkin?['end_time'] != null) return '已完成';
+      return '出发';
+    }
+    return checkin == null ? '打卡' : '已打卡';
+  }
+
+  String _subtitle(Habit habit, Map<String, dynamic>? checkin) {
+    if (habit.habitType == 'commute') {
+      final start = checkin?['start_time'];
+      final end = checkin?['end_time'];
+      if (start != null && end != null) return '出发 $start  到达 $end';
+      if (start != null) return '已出发 $start，到达后再点一次';
+      return '出发时先记录，到达后再补到达时间';
+    }
+
     final type = switch (habit.habitType) {
       'commute' => '通勤时间',
       'duration' => '记录时长',
@@ -131,15 +172,24 @@ class _TodayPageState extends State<TodayPage> {
     return '$type  建议 ${habit.suggestedTime ?? '-'}';
   }
 
+  String _successMessage(Habit habit, _CheckinPayload payload) {
+    if (habit.habitType == 'commute') {
+      if (payload.endTime != null) return '${habit.name} 到达时间已记录';
+      return '${habit.name} 出发时间已记录';
+    }
+    return '${habit.name} 打卡成功';
+  }
+
   String _date(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }
 
 class _CheckinSheet extends StatefulWidget {
-  const _CheckinSheet({required this.habit});
+  const _CheckinSheet({required this.habit, this.existingCheckin});
 
   final Habit habit;
+  final Map<String, dynamic>? existingCheckin;
 
   @override
   State<_CheckinSheet> createState() => _CheckinSheetState();
@@ -165,6 +215,13 @@ class _CheckinSheetState extends State<_CheckinSheet> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _startTime = _parseTime(widget.existingCheckin?['start_time'] as String?);
+    _endTime = _parseTime(widget.existingCheckin?['end_time'] as String?);
+  }
+
+  @override
   void dispose() {
     _noteController.dispose();
     super.dispose();
@@ -181,9 +238,15 @@ class _CheckinSheetState extends State<_CheckinSheet> {
   }
 
   void _submit() {
-    if (widget.habit.habitType == 'commute' && (_startTime == null || _endTime == null)) {
-      _message('请选择出发时间和到达时间');
-      return;
+    if (widget.habit.habitType == 'commute') {
+      if (_startTime == null) {
+        _message('请先记录出发时间');
+        return;
+      }
+      if (_hasStartedCommute && _endTime == null) {
+        _message('到达后请选择到达时间');
+        return;
+      }
     }
     if (widget.habit.habitType == 'duration' && _durationMinutes == null) {
       _message('请选择持续时间');
@@ -269,25 +332,55 @@ class _CheckinSheetState extends State<_CheckinSheet> {
   }
 
   Widget _commuteFields() {
+    final hasStarted = _hasStartedCommute;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => _pickTime('start'),
+          if (!hasStarted) ...[
+            FilledButton.icon(
+              onPressed: () {
+                final now = TimeOfDay.now();
+                setState(() {
+                  _startTime = now;
+                  _checkinTime = now;
+                });
+              },
               icon: const Icon(Icons.directions_walk),
-              label: Text('出发 ${_startTime == null ? '选择' : _format(_startTime!)}'),
+              label: const Text('现在出发'),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => _pickTime('end'),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _pickTime('start'),
+              icon: const Icon(Icons.schedule),
+              label: Text('手动选择出发时间 ${_startTime == null ? '' : _format(_startTime!)}'),
+            ),
+          ] else ...[
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.directions_walk),
+              title: const Text('已记录出发时间'),
+              subtitle: Text(_format(_startTime!)),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                final now = TimeOfDay.now();
+                setState(() {
+                  _endTime = now;
+                  _checkinTime = now;
+                });
+              },
               icon: const Icon(Icons.flag_outlined),
-              label: Text('到达 ${_endTime == null ? '选择' : _format(_endTime!)}'),
+              label: const Text('现在到达'),
             ),
-          ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _pickTime('end'),
+              icon: const Icon(Icons.schedule),
+              label: Text('手动选择到达时间 ${_endTime == null ? '' : _format(_endTime!)}'),
+            ),
+          ],
         ],
       ),
     );
@@ -344,6 +437,18 @@ class _CheckinSheetState extends State<_CheckinSheet> {
   String _format(TimeOfDay time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
+
+  TimeOfDay? _parseTime(String? value) {
+    if (value == null || value.length < 5) return null;
+    final parts = value.substring(0, 5).split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  bool get _hasStartedCommute => widget.habit.habitType == 'commute' && widget.existingCheckin?['start_time'] != null;
 }
 
 class _CheckinPayload {

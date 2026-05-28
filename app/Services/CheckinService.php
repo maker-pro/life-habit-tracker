@@ -25,6 +25,7 @@ class CheckinService
             ['habit_id' => $data['habit_id'], 'checkin_date' => $data['checkin_date']],
             $data
         );
+        $checkin = $this->fillDurationFromStoredTimes($checkin);
 
         $this->clearStatsCache($checkin);
         $this->persistSummaries([$checkin->checkin_date?->toDateString()]);
@@ -38,6 +39,7 @@ class CheckinService
         $oldDate = $checkin->checkin_date?->toDateString();
         $data = $this->normalize($data);
         $checkin->update($data);
+        $checkin = $this->fillDurationFromStoredTimes($checkin);
         $checkin->refresh()->load('habit');
         $this->clearStatsCache($checkin, $oldDate);
         $this->persistSummaries([$oldDate, $checkin->checkin_date?->toDateString()]);
@@ -95,6 +97,25 @@ class CheckinService
         }
 
         return $data;
+    }
+
+    private function fillDurationFromStoredTimes(Checkin $checkin): Checkin
+    {
+        $checkin->refresh();
+
+        if ($checkin->start_time && $checkin->end_time) {
+            $start = Carbon::createFromFormat('H:i:s', (string) $checkin->start_time);
+            $end = Carbon::createFromFormat('H:i:s', (string) $checkin->end_time);
+            if ($end->lessThan($start)) {
+                $end->addDay();
+            }
+
+            $checkin->forceFill([
+                'duration_minutes' => $start->diffInMinutes($end),
+            ])->save();
+        }
+
+        return $checkin->refresh()->load('habit');
     }
 
     private function persistSummaries(array $dates): void
