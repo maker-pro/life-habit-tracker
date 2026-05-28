@@ -220,15 +220,20 @@ layui.use(['layer'], function () {
             layer.open({
                 type: 1,
                 title: config.title,
-                area: ['96vw', '92vh'],
+                skin: 'chart-fullscreen-layer',
+                area: ['100vw', '100vh'],
+                offset: '0',
                 maxmin: true,
+                shadeClose: true,
                 content: '<div class="fullscreen-chart-box"><canvas id="' + canvasId + '"></canvas></div>',
                 success: function (layero) {
                     const content = layero.find('.layui-layer-content')[0];
                     const chartBox = layero.find('.fullscreen-chart-box')[0];
-                    content.style.height = 'calc(92vh - 51px)';
+                    content.style.width = '100vw';
+                    content.style.height = 'calc(100vh - 43px)';
                     content.style.overflow = 'hidden';
-                    chartBox.style.height = 'calc(92vh - 86px)';
+                    chartBox.style.width = '100%';
+                    chartBox.style.height = '100%';
 
                     requestAnimationFrame(function () {
                         const chart = new Chart(document.getElementById(canvasId), {
@@ -245,7 +250,7 @@ layui.use(['layer'], function () {
                                 plugins: {
                                     ...config.options.plugins,
                                     legend: {
-                                        position: 'bottom',
+                                        position: 'top',
                                         labels: { boxWidth: 24, boxHeight: 24, padding: 24, font: { size: 16 } }
                                     },
                                     tooltip: { titleFont: { size: 17 }, bodyFont: { size: 16 }, padding: 14 }
@@ -254,8 +259,8 @@ layui.use(['layer'], function () {
                             }
                         });
                         setTimeout(function () {
-                            chart.resize();
-                        }, 80);
+                            chart.resize(chartBox.clientWidth, chartBox.clientHeight);
+                        }, 160);
                     });
                 }
             });
