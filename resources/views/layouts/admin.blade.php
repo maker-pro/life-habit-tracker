@@ -22,6 +22,7 @@
             <li class="layui-nav-item {{ request()->routeIs('admin.analysis.topic') && request()->route('topic') === 'commute' ? 'layui-this' : '' }}"><a href="{{ route('admin.analysis.topic', 'commute') }}">通勤分析</a></li>
             <li class="layui-nav-item {{ request()->routeIs('admin.analysis.topic') && request()->route('topic') === 'time' ? 'layui-this' : '' }}"><a href="{{ route('admin.analysis.topic', 'time') }}">时间分配</a></li>
             <li class="layui-nav-item {{ request()->routeIs('admin.analysis.topic') && request()->route('topic') === 'body' ? 'layui-this' : '' }}"><a href="{{ route('admin.analysis.topic', 'body') }}">体重状态</a></li>
+            <li class="layui-nav-item {{ request()->routeIs('admin.reports.comprehensive') ? 'layui-this' : '' }}"><a href="{{ route('admin.reports.comprehensive') }}">综合报告</a></li>
             <li class="layui-nav-item {{ request()->routeIs('admin.reports.calendar') ? 'layui-this' : '' }}"><a href="{{ route('admin.reports.calendar') }}">日历视图</a></li>
             <li class="layui-nav-item {{ request()->routeIs('admin.reports.timeline') ? 'layui-this' : '' }}"><a href="{{ route('admin.reports.timeline') }}">时间线视图</a></li>
             <li class="layui-nav-item {{ request()->routeIs('admin.reports.summary') ? 'layui-this' : '' }}"><a href="{{ route('admin.reports.summary') }}">统计报告</a></li>

@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\ComprehensiveReportService;
 use App\Services\StatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly StatsService $statsService)
+    public function __construct(
+        private readonly StatsService $statsService,
+        private readonly ComprehensiveReportService $comprehensiveReportService
+    )
     {
     }
 
@@ -46,6 +50,16 @@ class ReportController extends Controller
         return view('admin.reports.calendar', [
             'month' => $month,
             'days' => $days,
+        ]);
+    }
+
+    public function comprehensive(Request $request)
+    {
+        $period = $request->query('period', 'week');
+
+        return view('admin.reports.comprehensive', [
+            'report' => $this->comprehensiveReportService->report($period),
+            'period' => $period,
         ]);
     }
 }
