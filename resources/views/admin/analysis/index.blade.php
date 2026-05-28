@@ -54,25 +54,33 @@
     <div class="layui-col-md6">
         <div class="layui-card">
             <div class="layui-card-header">睡眠与健康评分趋势</div>
-            <div class="layui-card-body"><canvas id="sleepChart" height="220"></canvas></div>
+            <div class="layui-card-body">
+                <div class="analysis-chart-box"><canvas id="sleepChart"></canvas></div>
+            </div>
         </div>
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
             <div class="layui-card-header">通勤时间趋势</div>
-            <div class="layui-card-body"><canvas id="commuteChart" height="220"></canvas></div>
+            <div class="layui-card-body">
+                <div class="analysis-chart-box"><canvas id="commuteChart"></canvas></div>
+            </div>
         </div>
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
             <div class="layui-card-header">学习 / 运动 / 游戏时间</div>
-            <div class="layui-card-body"><canvas id="timeChart" height="220"></canvas></div>
+            <div class="layui-card-body">
+                <div class="analysis-chart-box"><canvas id="timeChart"></canvas></div>
+            </div>
         </div>
     </div>
     <div class="layui-col-md6">
         <div class="layui-card">
             <div class="layui-card-header">体重与状态评分</div>
-            <div class="layui-card-body"><canvas id="bodyChart" height="220"></canvas></div>
+            <div class="layui-card-body">
+                <div class="analysis-chart-box"><canvas id="bodyChart"></canvas></div>
+            </div>
         </div>
     </div>
 </div>
@@ -114,6 +122,13 @@
 @section('scripts')
 <script>
 const chartData = @json($chartData);
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    resizeDelay: 120,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { position: 'bottom' } }
+};
 
 new Chart(document.getElementById('sleepChart'), {
     type: 'line',
@@ -124,13 +139,13 @@ new Chart(document.getElementById('sleepChart'), {
             { label: '健康评分', data: chartData.health, borderColor: '#16baaa', tension: .35, yAxisID: 'score' }
         ]
     },
-    options: { responsive: true, scales: { score: { position: 'right', min: 0, max: 100 } } }
+    options: { ...chartOptions, scales: { score: { position: 'right', min: 0, max: 100 } } }
 });
 
 new Chart(document.getElementById('commuteChart'), {
     type: 'bar',
     data: { labels: chartData.labels, datasets: [{ label: '通勤分钟', data: chartData.commute, backgroundColor: '#ffb800' }] },
-    options: { responsive: true }
+    options: chartOptions
 });
 
 new Chart(document.getElementById('timeChart'), {
@@ -143,7 +158,7 @@ new Chart(document.getElementById('timeChart'), {
             { label: '游戏', data: chartData.game, backgroundColor: '#a233c6' }
         ]
     },
-    options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+    options: { ...chartOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
 });
 
 new Chart(document.getElementById('bodyChart'), {
@@ -155,7 +170,7 @@ new Chart(document.getElementById('bodyChart'), {
             { label: '状态评分', data: chartData.mood, borderColor: '#e91e63', tension: .35, yAxisID: 'score' }
         ]
     },
-    options: { responsive: true, scales: { score: { position: 'right', min: 1, max: 5 } } }
+    options: { ...chartOptions, scales: { score: { position: 'right', min: 1, max: 5 } } }
 });
 </script>
 @endsection

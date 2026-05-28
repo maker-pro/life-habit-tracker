@@ -186,6 +186,19 @@ body {
     height: 320px;
 }
 
+.analysis-chart-box {
+    position: relative;
+    height: 300px;
+    min-height: 300px;
+    width: 100%;
+}
+
+.analysis-chart-box canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -298,5 +311,10 @@ body.dark.login-page {
 
     .login-error {
         margin-left: 0;
+    }
+
+    .analysis-chart-box {
+        height: 260px;
+        min-height: 260px;
     }
 }
