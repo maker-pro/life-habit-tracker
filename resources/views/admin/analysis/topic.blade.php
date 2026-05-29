@@ -220,6 +220,7 @@ charts.forEach(function (chart) {
                             const index = items[0].dataIndex;
                             const detail = chart.details ? chart.details[index] : null;
                             if (!detail) return [];
+                            if (detail.lines) return detail.lines;
 
                             return [
                                 '起床时间：' + detail.wake_time,
