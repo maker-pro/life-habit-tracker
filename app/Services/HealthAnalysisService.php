@@ -174,25 +174,16 @@ class HealthAnalysisService
             'summary' => "本周期平均睡眠 {$avgSleep} 小时，平均清醒 {$avgAwake} 小时。睡眠不足或睡觉时间波动较大时，个人状态可能更容易下降。",
             'charts' => [
                 [
-                    'id' => 'sleepHoursChart',
-                    'title' => '睡眠 / 清醒时长',
+                    'id' => 'sleepOverviewChart',
+                    'title' => '睡眠综合趋势',
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'details' => $reports->map(fn (DailyHealthReport $report) => $this->sleepDetail($report))->values(),
                     'datasets' => [
-                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff'],
-                        ['label' => '清醒小时', 'data' => $reports->pluck('awake_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#16baaa'],
-                    ],
-                ],
-                [
-                    'id' => 'sleepTimeChart',
-                    'title' => '起床 / 睡觉时间',
-                    'type' => 'line',
-                    'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
-                    'details' => $reports->map(fn (DailyHealthReport $report) => $this->sleepDetail($report))->values(),
-                    'datasets' => [
-                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800'],
-                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056'],
+                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff', 'axis' => 'duration'],
+                        ['label' => '清醒小时', 'data' => $reports->pluck('awake_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#16baaa', 'axis' => 'duration'],
+                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800', 'axis' => 'clock'],
+                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056', 'axis' => 'clock'],
                     ],
                 ],
             ],

@@ -166,6 +166,7 @@ charts.forEach(function (chart) {
             data: dataset.data,
             borderColor: dataset.color,
             backgroundColor: chart.type === 'bar' ? dataset.color : dataset.color + '22',
+            yAxisID: dataset.axis || 'y',
             tension: .35,
             borderWidth: 3,
             pointRadius: 4,
@@ -220,7 +221,28 @@ charts.forEach(function (chart) {
             },
             scales: {
                 x: { stacked: chart.stacked === true, ticks: { font: { size: 13 } } },
-                y: { stacked: chart.stacked === true, ticks: { font: { size: 13 } } }
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    stacked: chart.stacked === true,
+                    ticks: { font: { size: 13 } },
+                    title: { display: chart.id === 'sleepOverviewChart', text: chart.id === 'sleepOverviewChart' ? '时长（小时）' : '' }
+                },
+                clock: {
+                    type: 'linear',
+                    display: chart.id === 'sleepOverviewChart',
+                    position: 'right',
+                    min: 0,
+                    max: 24,
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        font: { size: 13 },
+                        callback: function (value) {
+                            return String(Math.floor(value)).padStart(2, '0') + ':00';
+                        }
+                    },
+                    title: { display: chart.id === 'sleepOverviewChart', text: '时间点' }
+                }
             }
         }
     });
