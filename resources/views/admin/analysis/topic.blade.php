@@ -19,6 +19,11 @@
         height: 100% !important;
     }
 
+    .topic-chart-box.large {
+        height: 560px;
+        min-height: 560px;
+    }
+
     .topic-nav {
         display: flex;
         gap: 8px;
@@ -71,11 +76,11 @@
 
 <div class="layui-row layui-col-space15">
     @foreach ($topic['charts'] as $chart)
-        <div class="layui-col-md6">
+        <div class="{{ !empty($chart['wide']) ? 'layui-col-md12' : 'layui-col-md6' }}">
             <div class="layui-card">
                 <div class="layui-card-header">{{ $chart['title'] }}</div>
                 <div class="layui-card-body">
-                    <div class="topic-chart-box"><canvas id="{{ $chart['id'] }}"></canvas></div>
+                    <div class="topic-chart-box {{ !empty($chart['wide']) ? 'large' : '' }}"><canvas id="{{ $chart['id'] }}"></canvas></div>
                 </div>
             </div>
         </div>
@@ -174,6 +179,9 @@ charts.forEach(function (chart) {
             borderRadius: 6,
         };
     });
+    const hasDurationAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'duration' || dataset.yAxisID === 'y'; });
+    const hasClockAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'clock'; });
+    const hasScoreAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'score'; });
 
     const instance = new Chart(document.getElementById(chart.id), {
         type: chart.type,
@@ -198,7 +206,13 @@ charts.forEach(function (chart) {
                             return detail ? detail.date : items[0].label;
                         },
                         label: function (ctx) {
-                            return ctx.dataset.label + '：' + ctx.formattedValue;
+                            if (ctx.dataset.yAxisID === 'clock') {
+                                return ctx.dataset.label + '：' + formatClock(ctx.raw);
+                            }
+                            if (ctx.dataset.yAxisID === 'score') {
+                                return ctx.dataset.label + '：' + ctx.formattedValue + '分';
+                            }
+                            return ctx.dataset.label + '：' + ctx.formattedValue + '小时';
                         },
                         afterBody: function (items) {
                             const index = items[0].dataIndex;
@@ -209,7 +223,6 @@ charts.forEach(function (chart) {
                                 '起床时间：' + detail.wake_time,
                                 '睡觉时间：' + detail.sleep_time,
                                 '睡眠时长：' + detail.sleep_hours + '小时',
-                                '清醒时长：' + detail.awake_hours + '小时',
                                 '睡眠质量：' + detail.quality,
                                 '健康评分：' + detail.health_score + '分',
                                 '个人状态：' + detail.mood + '（' + detail.mood_score + '）',
@@ -224,24 +237,35 @@ charts.forEach(function (chart) {
                 y: {
                     type: 'linear',
                     position: 'left',
+                    display: hasDurationAxis,
                     stacked: chart.stacked === true,
                     ticks: { font: { size: 13 } },
-                    title: { display: chart.id === 'sleepOverviewChart', text: chart.id === 'sleepOverviewChart' ? '时长（小时）' : '' }
+                    title: { display: hasDurationAxis && chart.id.toLowerCase().includes('sleep'), text: '时长（小时）' }
                 },
                 clock: {
                     type: 'linear',
-                    display: chart.id === 'sleepOverviewChart',
-                    position: 'right',
+                    display: hasClockAxis,
+                    position: hasDurationAxis ? 'right' : 'left',
                     min: 0,
                     max: 24,
-                    grid: { drawOnChartArea: false },
+                    grid: { drawOnChartArea: !hasDurationAxis },
                     ticks: {
                         font: { size: 13 },
                         callback: function (value) {
-                            return String(Math.floor(value)).padStart(2, '0') + ':00';
+                            return formatClock(value);
                         }
                     },
-                    title: { display: chart.id === 'sleepOverviewChart', text: '时间点' }
+                    title: { display: hasClockAxis, text: '时间点' }
+                },
+                score: {
+                    type: 'linear',
+                    display: hasScoreAxis,
+                    position: 'right',
+                    min: 1,
+                    max: 5,
+                    grid: { drawOnChartArea: false },
+                    ticks: { font: { size: 13 } },
+                    title: { display: hasScoreAxis, text: '状态评分' }
                 }
             }
         }
@@ -252,5 +276,17 @@ charts.forEach(function (chart) {
         instance.resize(box.clientWidth, box.clientHeight);
     }, 120);
 });
+
+function formatClock(value) {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return '-';
+    let hour = Math.floor(numeric) % 24;
+    let minute = Math.round((numeric - Math.floor(numeric)) * 60);
+    if (minute >= 60) {
+        minute = 0;
+        hour = (hour + 1) % 24;
+    }
+    return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+}
 </script>
 @endsection
