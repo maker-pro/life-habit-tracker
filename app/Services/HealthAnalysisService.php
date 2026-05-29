@@ -181,10 +181,7 @@ class HealthAnalysisService
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'details' => $reports->map(fn (DailyHealthReport $report) => $this->sleepDetail($report))->values(),
                     'datasets' => [
-                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff', 'axis' => 'duration'],
-                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800', 'axis' => 'clock'],
-                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056', 'axis' => 'clock'],
-                        ['label' => '状态评分', 'data' => $reports->pluck('mood_score')->values(), 'color' => '#e91e63', 'axis' => 'score'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa', 'axis' => 'health', 'unit' => '分'],
                     ],
                 ],
                 [
@@ -193,7 +190,7 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff', 'axis' => 'duration'],
+                        ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff', 'axis' => 'duration', 'unit' => '小时'],
                     ],
                 ],
                 [
@@ -202,7 +199,7 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800', 'axis' => 'clock'],
+                        ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800', 'axis' => 'clock', 'unit' => '时间'],
                     ],
                 ],
                 [
@@ -211,7 +208,7 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056', 'axis' => 'clock'],
+                        ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056', 'axis' => 'clock', 'unit' => '时间'],
                     ],
                 ],
             ],

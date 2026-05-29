@@ -172,6 +172,7 @@ charts.forEach(function (chart) {
             borderColor: dataset.color,
             backgroundColor: chart.type === 'bar' ? dataset.color : dataset.color + '22',
             yAxisID: dataset.axis || 'y',
+            unit: dataset.unit || '',
             tension: .35,
             borderWidth: 3,
             pointRadius: 4,
@@ -182,6 +183,7 @@ charts.forEach(function (chart) {
     const hasDurationAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'duration' || dataset.yAxisID === 'y'; });
     const hasClockAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'clock'; });
     const hasScoreAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'score'; });
+    const hasHealthAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'health'; });
 
     const instance = new Chart(document.getElementById(chart.id), {
         type: chart.type,
@@ -212,7 +214,7 @@ charts.forEach(function (chart) {
                             if (ctx.dataset.yAxisID === 'score') {
                                 return ctx.dataset.label + '：' + ctx.formattedValue + '分';
                             }
-                            return ctx.dataset.label + '：' + ctx.formattedValue + '小时';
+                            return ctx.dataset.label + '：' + ctx.formattedValue + (ctx.dataset.unit || '');
                         },
                         afterBody: function (items) {
                             const index = items[0].dataIndex;
@@ -266,6 +268,15 @@ charts.forEach(function (chart) {
                     grid: { drawOnChartArea: false },
                     ticks: { font: { size: 13 } },
                     title: { display: hasScoreAxis, text: '状态评分' }
+                },
+                health: {
+                    type: 'linear',
+                    display: hasHealthAxis,
+                    position: 'left',
+                    min: 0,
+                    max: 100,
+                    ticks: { font: { size: 13 } },
+                    title: { display: hasHealthAxis, text: '健康评分' }
                 }
             }
         }
