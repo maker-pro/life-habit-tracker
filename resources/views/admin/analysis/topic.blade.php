@@ -183,10 +183,39 @@ charts.forEach(function (chart) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: { boxWidth: 20, boxHeight: 20, padding: 18, font: { size: 14 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function (items) {
+                            const index = items[0].dataIndex;
+                            const detail = chart.details ? chart.details[index] : null;
+                            return detail ? detail.date : items[0].label;
+                        },
+                        label: function (ctx) {
+                            return ctx.dataset.label + '：' + ctx.formattedValue;
+                        },
+                        afterBody: function (items) {
+                            const index = items[0].dataIndex;
+                            const detail = chart.details ? chart.details[index] : null;
+                            if (!detail) return [];
+
+                            return [
+                                '起床时间：' + detail.wake_time,
+                                '睡觉时间：' + detail.sleep_time,
+                                '睡眠时长：' + detail.sleep_hours + '小时',
+                                '清醒时长：' + detail.awake_hours + '小时',
+                                '睡眠质量：' + detail.quality,
+                                '健康评分：' + detail.health_score + '分',
+                                '个人状态：' + detail.mood + '（' + detail.mood_score + '）',
+                                '备注：' + detail.note
+                            ];
+                        }
+                    }
                 }
             },
             scales: {

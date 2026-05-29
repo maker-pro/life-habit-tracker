@@ -178,6 +178,7 @@ class HealthAnalysisService
                     'title' => '睡眠 / 清醒时长',
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'details' => $reports->map(fn (DailyHealthReport $report) => $this->sleepDetail($report))->values(),
                     'datasets' => [
                         ['label' => '睡眠小时', 'data' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#1e9fff'],
                         ['label' => '清醒小时', 'data' => $reports->pluck('awake_minutes')->map(fn ($value) => round($value / 60, 1))->values(), 'color' => '#16baaa'],
@@ -188,6 +189,7 @@ class HealthAnalysisService
                     'title' => '起床 / 睡觉时间',
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+                    'details' => $reports->map(fn (DailyHealthReport $report) => $this->sleepDetail($report))->values(),
                     'datasets' => [
                         ['label' => '起床时间', 'data' => $reports->pluck('wake_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#ffb800'],
                         ['label' => '睡觉时间', 'data' => $reports->pluck('sleep_time')->map(fn ($value) => $this->timeToHour((string) $value))->values(), 'color' => '#2f4056'],
@@ -250,6 +252,22 @@ class HealthAnalysisService
                 'impact' => '健康评分 '.$report->health_score,
                 'note' => collect($report->metrics['notes'] ?? [])->implode('；') ?: '-',
             ])->values(),
+        ];
+    }
+
+    private function sleepDetail(DailyHealthReport $report): array
+    {
+        return [
+            'date' => $report->report_date->toDateString(),
+            'sleep_hours' => round($report->sleep_minutes / 60, 1),
+            'awake_hours' => round($report->awake_minutes / 60, 1),
+            'wake_time' => substr((string) $report->wake_time, 0, 5),
+            'sleep_time' => substr((string) $report->sleep_time, 0, 5),
+            'health_score' => $report->health_score,
+            'mood' => $report->mood_level ?: '-',
+            'mood_score' => $report->mood_score ?: '-',
+            'quality' => $report->metrics['sleep_quality'] ?? '-',
+            'note' => collect($report->metrics['notes'] ?? [])->implode('；') ?: '-',
         ];
     }
 
