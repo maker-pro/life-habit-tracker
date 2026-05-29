@@ -116,6 +116,50 @@
 const charts = @json($topic['charts']);
 
 charts.forEach(function (chart) {
+    if (chart.type === 'pie' || chart.type === 'doughnut') {
+        const instance = new Chart(document.getElementById(chart.id), {
+            type: chart.type,
+            data: {
+                labels: chart.labels,
+                datasets: [{
+                    label: chart.title,
+                    data: chart.values,
+                    backgroundColor: chart.colors,
+                    borderWidth: 1,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: chart.type === 'doughnut' ? '58%' : 0,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 20, boxHeight: 20, padding: 18, font: { size: 14 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const total = ctx.dataset.data.reduce(function (sum, item) {
+                                    return sum + Number(item || 0);
+                                }, 0);
+                                const value = Number(ctx.raw || 0);
+                                const percent = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
+                                return ctx.label + '：' + value + '分钟，占比' + percent + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        setTimeout(function () {
+            const box = document.getElementById(chart.id).closest('.topic-chart-box');
+            instance.resize(box.clientWidth, box.clientHeight);
+        }, 120);
+        return;
+    }
+
     const datasets = chart.datasets.map(function (dataset) {
         return {
             label: dataset.label,

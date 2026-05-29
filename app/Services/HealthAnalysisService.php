@@ -256,21 +256,34 @@ class HealthAnalysisService
     private function timeTopic(Collection $reports, Carbon $start, Carbon $end): array
     {
         $awake = (int) $reports->sum('awake_minutes');
+        $study = (int) $reports->sum('study_minutes');
+        $exercise = (int) $reports->sum('exercise_minutes');
+        $game = (int) $reports->sum('game_minutes');
+        $commute = (int) $reports->sum('commute_minutes');
+        $other = max($awake - $study - $exercise - $game - $commute, 0);
 
         return [
             'key' => 'time',
             'title' => '学习运动游戏分析',
-            'desc' => '查看学习、运动、游戏在清醒时间中的占比',
+            'desc' => '查看学习、运动、游戏、通勤和其他时间在清醒时间中的占比',
             'start_date' => $start->toDateString(),
             'end_date' => $end->toDateString(),
             'cards' => [
-                ['label' => '学习占比', 'value' => $this->ratio((int) $reports->sum('study_minutes'), $awake), 'unit' => '%'],
-                ['label' => '运动占比', 'value' => $this->ratio((int) $reports->sum('exercise_minutes'), $awake), 'unit' => '%'],
-                ['label' => '游戏占比', 'value' => $this->ratio((int) $reports->sum('game_minutes'), $awake), 'unit' => '%'],
+                ['label' => '学习占比', 'value' => $this->ratio($study, $awake), 'unit' => '%'],
+                ['label' => '运动占比', 'value' => $this->ratio($exercise, $awake), 'unit' => '%'],
+                ['label' => '游戏占比', 'value' => $this->ratio($game, $awake), 'unit' => '%'],
                 ['label' => '清醒总时长', 'value' => round($awake / 60, 1), 'unit' => '小时'],
             ],
-            'summary' => '本页用于观察学习、运动、游戏如何占用清醒时间。运动时间增加通常对状态有正向帮助，游戏过长可能挤压睡眠和恢复时间。',
+            'summary' => '本页用于观察清醒时间如何被分配。饼图中的“其他”代表没有被学习、运动、游戏、通勤等打卡项目覆盖的清醒时间。',
             'charts' => [
+                [
+                    'id' => 'timePieChart',
+                    'title' => '清醒时间占比',
+                    'type' => 'doughnut',
+                    'labels' => ['学习', '运动', '游戏', '通勤', '其他'],
+                    'values' => [$study, $exercise, $game, $commute, $other],
+                    'colors' => ['#5fb878', '#ff5722', '#a233c6', '#ffb800', '#607d8b'],
+                ],
                 [
                     'id' => 'timeStackChart',
                     'title' => '学习 / 运动 / 游戏每日时长',
