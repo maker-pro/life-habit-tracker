@@ -157,7 +157,33 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 20, boxHeight: 20, font: { size: 14 } } } },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 20, boxHeight: 20, font: { size: 14 } } },
+            tooltip: {
+                callbacks: {
+                    title: function (items) {
+                        const detail = chart.details[items[0].dataIndex];
+                        return detail ? detail.date : items[0].label;
+                    },
+                    afterBody: function (items) {
+                        const detail = chart.details[items[0].dataIndex];
+                        if (!detail) return [];
+
+                        return [
+                            '睡眠：' + detail.sleep_hours + '小时',
+                            '通勤：' + detail.commute_minutes + '分钟',
+                            '学习：' + detail.study_minutes + '分钟',
+                            '运动/游戏：运动' + detail.exercise_minutes + '分钟 / 游戏' + detail.game_minutes + '分钟',
+                            '体重/状态：' + (detail.weight ? detail.weight + 'kg' : '-') + ' / ' + (detail.mood_level || '-'),
+                            '状态评分：' + (detail.mood_score || '-'),
+                            '健康评分：' + detail.health_score,
+                            '每日总结：' + (detail.analysis_text || '-')
+                        ];
+                    }
+                }
+            }
+        },
         scales: { x: { ticks: { font: { size: 13 } } }, y: { ticks: { font: { size: 13 } } } }
     }
 });

@@ -28,20 +28,8 @@ class ComprehensiveReportService
                 'summary' => $this->summaryText($label, $metrics),
                 'insights' => $this->insights($reports, $metrics),
                 'suggestions' => $this->suggestions($metrics),
-                'chart' => $this->chart($reports),
-                'rows' => $reports->map(fn (DailyHealthReport $report) => [
-                    'date' => $report->report_date->toDateString(),
-                    'sleep_hours' => round($report->sleep_minutes / 60, 1),
-                    'commute_minutes' => $report->commute_minutes,
-                    'study_minutes' => $report->study_minutes,
-                    'exercise_minutes' => $report->exercise_minutes,
-                    'game_minutes' => $report->game_minutes,
-                    'weight' => $report->weight,
-                    'mood_level' => $report->mood_level,
-                    'mood_score' => $report->mood_score,
-                    'health_score' => $report->health_score,
-                    'analysis_text' => $report->analysis_text,
-                ])->values(),
+            'chart' => $this->chart($reports),
+                'rows' => $this->rows($reports),
             ];
         });
     }
@@ -167,6 +155,7 @@ class ComprehensiveReportService
     {
         return [
             'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
+            'details' => $this->rows($reports),
             'health' => $reports->pluck('health_score')->values(),
             'sleep' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(),
             'commute' => $reports->pluck('commute_minutes')->values(),
@@ -174,5 +163,22 @@ class ComprehensiveReportService
             'game' => $reports->pluck('game_minutes')->values(),
             'mood' => $reports->pluck('mood_score')->values(),
         ];
+    }
+
+    private function rows(Collection $reports): Collection
+    {
+        return $reports->map(fn (DailyHealthReport $report) => [
+            'date' => $report->report_date->toDateString(),
+            'sleep_hours' => round($report->sleep_minutes / 60, 1),
+            'commute_minutes' => $report->commute_minutes,
+            'study_minutes' => $report->study_minutes,
+            'exercise_minutes' => $report->exercise_minutes,
+            'game_minutes' => $report->game_minutes,
+            'weight' => $report->weight,
+            'mood_level' => $report->mood_level,
+            'mood_score' => $report->mood_score,
+            'health_score' => $report->health_score,
+            'analysis_text' => $report->analysis_text,
+        ])->values();
     }
 }
