@@ -246,6 +246,7 @@ class HealthAnalysisService
                     'id' => 'commuteTimeChart',
                     'title' => '上下班出发 / 到达时间',
                     'type' => 'line',
+                    'wide' => true,
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'details' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()] ?? [
                         'date' => $report->report_date->toDateString(),

@@ -178,6 +178,8 @@ charts.forEach(function (chart) {
             pointRadius: 4,
             pointHoverRadius: 7,
             borderRadius: 6,
+            spanGaps: chart.type === 'line',
+            fill: false,
         };
     });
     const hasDurationAxis = datasets.some(function (dataset) { return dataset.yAxisID === 'duration' || dataset.yAxisID === 'y'; });
