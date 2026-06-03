@@ -159,8 +159,10 @@ class ComprehensiveReportService
             'health' => $reports->pluck('health_score')->values(),
             'sleep' => $reports->pluck('sleep_minutes')->map(fn ($value) => round($value / 60, 1))->values(),
             'commute' => $reports->pluck('commute_minutes')->values(),
+            'study' => $reports->pluck('study_minutes')->values(),
             'exercise' => $reports->pluck('exercise_minutes')->values(),
             'game' => $reports->pluck('game_minutes')->values(),
+            'weight' => $reports->pluck('weight')->values(),
             'mood' => $reports->pluck('mood_score')->values(),
         ];
     }

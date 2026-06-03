@@ -148,10 +148,14 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
     data: {
         labels: chart.labels,
         datasets: [
-            { label: '健康评分', data: chart.health, borderColor: '#16baaa', backgroundColor: 'rgba(22,186,170,.12)', tension: .35, borderWidth: 3 },
-            { label: '睡眠小时', data: chart.sleep, borderColor: '#1e9fff', backgroundColor: 'rgba(30,159,255,.12)', tension: .35, borderWidth: 3 },
-            { label: '运动分钟', data: chart.exercise, borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,.12)', tension: .35, borderWidth: 3 },
-            { label: '游戏分钟', data: chart.game, borderColor: '#a233c6', backgroundColor: 'rgba(162,51,198,.12)', tension: .35, borderWidth: 3 },
+            { label: '健康评分', data: chart.health, borderColor: '#16baaa', backgroundColor: 'rgba(22,186,170,.12)', tension: .35, borderWidth: 3, yAxisID: 'score', unit: '分' },
+            { label: '状态评分', data: chart.mood, borderColor: '#e91e63', backgroundColor: 'rgba(233,30,99,.12)', tension: .35, borderWidth: 3, yAxisID: 'score', unit: '分' },
+            { label: '睡眠小时', data: chart.sleep, borderColor: '#1e9fff', backgroundColor: 'rgba(30,159,255,.12)', tension: .35, borderWidth: 3, yAxisID: 'body', unit: '小时' },
+            { label: '体重', data: chart.weight, borderColor: '#009688', backgroundColor: 'rgba(0,150,136,.12)', tension: .35, borderWidth: 3, yAxisID: 'body', unit: 'kg' },
+            { label: '通勤分钟', data: chart.commute, borderColor: '#ffb800', backgroundColor: 'rgba(255,184,0,.12)', tension: .35, borderWidth: 3, yAxisID: 'minutes', unit: '分钟' },
+            { label: '学习分钟', data: chart.study, borderColor: '#5fb878', backgroundColor: 'rgba(95,184,120,.12)', tension: .35, borderWidth: 3, yAxisID: 'minutes', unit: '分钟' },
+            { label: '运动分钟', data: chart.exercise, borderColor: '#ff5722', backgroundColor: 'rgba(255,87,34,.12)', tension: .35, borderWidth: 3, yAxisID: 'minutes', unit: '分钟' },
+            { label: '游戏分钟', data: chart.game, borderColor: '#a233c6', backgroundColor: 'rgba(162,51,198,.12)', tension: .35, borderWidth: 3, yAxisID: 'minutes', unit: '分钟' },
         ]
     },
     options: {
@@ -162,6 +166,9 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
             legend: { position: 'bottom', labels: { boxWidth: 20, boxHeight: 20, font: { size: 14 } } },
             tooltip: {
                 callbacks: {
+                    label: function (ctx) {
+                        return ctx.dataset.label + '：' + ctx.formattedValue + (ctx.dataset.unit || '');
+                    },
                     title: function (items) {
                         const detail = getChartDetail(items);
                         return detail ? detail.date : items[0].label;
@@ -184,7 +191,30 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
                 }
             }
         },
-        scales: { x: { ticks: { font: { size: 13 } } }, y: { ticks: { font: { size: 13 } } } }
+        scales: {
+            x: { ticks: { font: { size: 13 } } },
+            score: {
+                type: 'linear',
+                position: 'left',
+                min: 0,
+                max: 100,
+                ticks: { font: { size: 13 } },
+                title: { display: true, text: '评分' }
+            },
+            minutes: {
+                type: 'linear',
+                position: 'right',
+                grid: { drawOnChartArea: false },
+                ticks: { font: { size: 13 } },
+                title: { display: true, text: '分钟' }
+            },
+            body: {
+                type: 'linear',
+                position: 'right',
+                display: false,
+                grid: { drawOnChartArea: false }
+            }
+        }
     }
 });
 
