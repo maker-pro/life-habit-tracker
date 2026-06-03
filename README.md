@@ -185,6 +185,26 @@ supervisorctl start life-habit-tracker-worker:*
 
 ## API
 
+所有 `/api/*` 接口默认需要 App Token：
+
+```http
+Authorization: Bearer 你的APP_API_TOKEN
+X-App-Token: 你的APP_API_TOKEN
+```
+
+服务端在 `.env` 中配置：
+
+```env
+APP_API_TOKEN=你的长随机token
+```
+
+Flutter 可在设置页填写 Token，或打包时注入默认值：
+
+```bash
+flutter run --dart-define=APP_API_TOKEN=你的长随机token
+flutter build apk --dart-define=APP_API_TOKEN=你的长随机token
+```
+
 ```text
 GET    /api/habits
 POST   /api/habits

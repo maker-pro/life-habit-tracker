@@ -8,6 +8,7 @@ class ApiClient {
   ApiClient._();
 
   static String baseUrl = 'http://192.168.11.23:18083/api';
+  static String apiToken = const String.fromEnvironment('APP_API_TOKEN');
 
   static Future<List<Habit>> habits() async {
     final data = await _get('/habits');
@@ -76,14 +77,14 @@ class ApiClient {
   }
 
   static Future<dynamic> _get(String path) async {
-    final response = await http.get(Uri.parse('$baseUrl$path'));
+    final response = await http.get(Uri.parse('$baseUrl$path'), headers: _headers());
     return _decode(response);
   }
 
   static Future<dynamic> _post(String path, Map<String, dynamic> body) async {
     final response = await http.post(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode(body),
     );
     return _decode(response);
@@ -92,15 +93,23 @@ class ApiClient {
   static Future<dynamic> _put(String path, Map<String, dynamic> body) async {
     final response = await http.put(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode(body),
     );
     return _decode(response);
   }
 
   static Future<dynamic> _delete(String path) async {
-    final response = await http.delete(Uri.parse('$baseUrl$path'));
+    final response = await http.delete(Uri.parse('$baseUrl$path'), headers: _headers());
     return _decode(response);
+  }
+
+  static Map<String, String> _headers({bool json = false}) {
+    return {
+      if (json) 'Content-Type': 'application/json',
+      if (apiToken.trim().isNotEmpty) 'Authorization': 'Bearer ${apiToken.trim()}',
+      if (apiToken.trim().isNotEmpty) 'X-App-Token': apiToken.trim(),
+    };
   }
 
   static dynamic _decode(http.Response response) {
