@@ -203,6 +203,9 @@ const chartOptions = {
         line: { borderWidth: 4 },
         bar: { borderRadius: 8 }
     },
+    datasets: {
+        line: { spanGaps: true }
+    },
     plugins: {
         legend: {
             position: 'bottom',
@@ -223,8 +226,8 @@ const chartConfigs = {
         data: {
             labels: chartData.labels,
             datasets: [
-                { label: '睡眠小时', data: chartData.sleep, borderColor: '#1e9fff', backgroundColor: 'rgba(30,159,255,.12)', tension: .35 },
-                { label: '健康评分', data: chartData.health, borderColor: '#16baaa', backgroundColor: 'rgba(22,186,170,.12)', tension: .35, yAxisID: 'score' }
+                { label: '睡眠小时', data: chartData.sleep, borderColor: '#1e9fff', backgroundColor: 'rgba(30,159,255,.12)', tension: .35, spanGaps: true },
+                { label: '健康评分', data: chartData.health, borderColor: '#16baaa', backgroundColor: 'rgba(22,186,170,.12)', tension: .35, yAxisID: 'score', spanGaps: true }
             ]
         },
         options: { ...chartOptions, scales: { ...chartOptions.scales, score: { position: 'right', min: 0, max: 100, ticks: { font: { size: 13 } } } } }
@@ -254,8 +257,8 @@ const chartConfigs = {
         data: {
             labels: chartData.labels,
             datasets: [
-                { label: '体重', data: chartData.weight, borderColor: '#009688', backgroundColor: 'rgba(0,150,136,.12)', tension: .35 },
-                { label: '状态评分', data: chartData.mood, borderColor: '#e91e63', backgroundColor: 'rgba(233,30,99,.12)', tension: .35, yAxisID: 'score' }
+                { label: '体重', data: chartData.weight, borderColor: '#009688', backgroundColor: 'rgba(0,150,136,.12)', tension: .35, spanGaps: true },
+                { label: '状态评分', data: chartData.mood, borderColor: '#e91e63', backgroundColor: 'rgba(233,30,99,.12)', tension: .35, yAxisID: 'score', spanGaps: true }
             ]
         },
         options: { ...chartOptions, scales: { ...chartOptions.scales, score: { position: 'right', min: 1, max: 5, ticks: { font: { size: 13 } } } } }

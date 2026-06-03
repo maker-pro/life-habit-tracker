@@ -73,6 +73,35 @@ class CheckinService
             Cache::forget('stats:weekly:'.$carbon->isoWeekYear().'-W'.$carbon->isoWeek());
             Cache::forget('stats:monthly:'.$carbon->format('Y-m'));
         }
+
+        $this->clearAnalysisCaches($dates);
+    }
+
+    private function clearAnalysisCaches(array $dates): void
+    {
+        $bases = collect($dates)
+            ->filter()
+            ->map(fn (string $date) => Carbon::parse($date))
+            ->push(Carbon::today())
+            ->unique(fn (Carbon $date) => $date->toDateString());
+
+        foreach ($bases as $base) {
+            $ranges = [
+                'day' => [$base->copy(), $base->copy()],
+                'week' => [$base->copy()->subDays(6), $base->copy()],
+                'month' => [$base->copy()->subDays(29), $base->copy()],
+            ];
+
+            foreach ($ranges as $period => [$start, $end]) {
+                Cache::forget('report:comprehensive:'.$period.':'.$start->toDateString().':'.$end->toDateString());
+            }
+        }
+
+        foreach (['week' => 6, 'month' => 29] as $period => $days) {
+            $end = Carbon::today();
+            $start = $end->copy()->subDays($days);
+            Cache::forget('analysis:correlation:'.$period.':'.$start->toDateString().':'.$end->toDateString());
+        }
     }
 
     private function normalize(array $data): array

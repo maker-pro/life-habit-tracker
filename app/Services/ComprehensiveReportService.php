@@ -28,7 +28,7 @@ class ComprehensiveReportService
                 'summary' => $this->summaryText($label, $metrics),
                 'insights' => $this->insights($reports, $metrics),
                 'suggestions' => $this->suggestions($metrics),
-            'chart' => $this->chart($reports),
+                'chart' => $this->chart($reports),
                 'rows' => $this->rows($reports),
             ];
         });
@@ -162,8 +162,8 @@ class ComprehensiveReportService
             'study' => $reports->pluck('study_minutes')->values(),
             'exercise' => $reports->pluck('exercise_minutes')->values(),
             'game' => $reports->pluck('game_minutes')->values(),
-            'weight' => $reports->pluck('weight')->values(),
-            'mood' => $reports->pluck('mood_score')->values(),
+            'weight' => $reports->map(fn (DailyHealthReport $report) => $report->weight !== null ? (float) $report->weight : null)->values(),
+            'mood' => $reports->map(fn (DailyHealthReport $report) => $report->mood_score !== null ? (int) $report->mood_score : null)->values(),
         ];
     }
 
@@ -176,7 +176,7 @@ class ComprehensiveReportService
             'study_minutes' => $report->study_minutes,
             'exercise_minutes' => $report->exercise_minutes,
             'game_minutes' => $report->game_minutes,
-            'weight' => $report->weight,
+            'weight' => $report->weight !== null ? (float) $report->weight : null,
             'mood_level' => $report->mood_level,
             'mood_score' => $report->mood_score,
             'health_score' => $report->health_score,

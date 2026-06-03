@@ -121,8 +121,8 @@ class HealthAnalysisService
             'study' => $reports->pluck('study_minutes')->values(),
             'exercise' => $reports->pluck('exercise_minutes')->values(),
             'game' => $reports->pluck('game_minutes')->values(),
-            'weight' => $reports->pluck('weight')->values(),
-            'mood' => $reports->pluck('mood_score')->values(),
+            'weight' => $reports->map(fn (DailyHealthReport $report) => $report->weight !== null ? (float) $report->weight : null)->values(),
+            'mood' => $reports->map(fn (DailyHealthReport $report) => $report->mood_score !== null ? (int) $report->mood_score : null)->values(),
             'health' => $reports->pluck('health_score')->values(),
         ];
     }
@@ -385,9 +385,9 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '运动分钟', 'data' => $reports->pluck('exercise_minutes')->values(), 'color' => '#ff5722'],
-                        ['label' => '游戏分钟', 'data' => $reports->pluck('game_minutes')->values(), 'color' => '#a233c6'],
-                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa'],
+                        ['label' => '运动分钟', 'data' => $reports->pluck('exercise_minutes')->values(), 'color' => '#ff5722', 'axis' => 'y', 'unit' => '分钟'],
+                        ['label' => '游戏分钟', 'data' => $reports->pluck('game_minutes')->values(), 'color' => '#a233c6', 'axis' => 'y', 'unit' => '分钟'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa', 'axis' => 'health', 'unit' => '分'],
                     ],
                 ],
             ],
@@ -426,8 +426,8 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '体重', 'data' => $reports->pluck('weight')->values(), 'color' => '#009688'],
-                        ['label' => '状态评分', 'data' => $reports->pluck('mood_score')->values(), 'color' => '#e91e63'],
+                        ['label' => '体重', 'data' => $reports->map(fn (DailyHealthReport $report) => $report->weight !== null ? (float) $report->weight : null)->values(), 'color' => '#009688', 'axis' => 'y', 'unit' => 'kg'],
+                        ['label' => '状态评分', 'data' => $reports->map(fn (DailyHealthReport $report) => $report->mood_score !== null ? (int) $report->mood_score : null)->values(), 'color' => '#e91e63', 'axis' => 'score', 'unit' => '分'],
                     ],
                 ],
                 [
@@ -436,8 +436,8 @@ class HealthAnalysisService
                     'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'datasets' => [
-                        ['label' => '状态评分', 'data' => $reports->pluck('mood_score')->values(), 'color' => '#e91e63'],
-                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa'],
+                        ['label' => '状态评分', 'data' => $reports->map(fn (DailyHealthReport $report) => $report->mood_score !== null ? (int) $report->mood_score : null)->values(), 'color' => '#e91e63', 'axis' => 'score', 'unit' => '分'],
+                        ['label' => '健康评分', 'data' => $reports->pluck('health_score')->values(), 'color' => '#16baaa', 'axis' => 'health', 'unit' => '分'],
                     ],
                 ],
             ],

@@ -276,9 +276,10 @@ charts.forEach(function (chart) {
                 health: {
                     type: 'linear',
                     display: hasHealthAxis,
-                    position: 'left',
+                    position: hasDurationAxis ? 'right' : 'left',
                     min: 0,
                     max: 100,
+                    grid: { drawOnChartArea: !hasDurationAxis },
                     ticks: { font: { size: 13 } },
                     title: { display: hasHealthAxis, text: '健康评分' }
                 }
