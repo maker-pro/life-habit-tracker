@@ -163,11 +163,11 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
             tooltip: {
                 callbacks: {
                     title: function (items) {
-                        const detail = chart.details[items[0].dataIndex];
+                        const detail = getChartDetail(items);
                         return detail ? detail.date : items[0].label;
                     },
                     afterBody: function (items) {
-                        const detail = chart.details[items[0].dataIndex];
+                        const detail = getChartDetail(items);
                         if (!detail) return [];
 
                         return [
@@ -187,6 +187,23 @@ const instance = new Chart(document.getElementById('comprehensiveChart'), {
         scales: { x: { ticks: { font: { size: 13 } } }, y: { ticks: { font: { size: 13 } } } }
     }
 });
+
+function getChartDetail(items) {
+    if (!items || !items.length || !chart.details) {
+        return null;
+    }
+
+    const details = Array.isArray(chart.details) ? chart.details : Object.values(chart.details);
+    const index = items[0].dataIndex;
+    if (details[index]) {
+        return details[index];
+    }
+
+    const label = items[0].label;
+    return details.find(function (item) {
+        return item && item.date && (item.date === label || item.date.slice(5) === label);
+    }) || null;
+}
 
 setTimeout(function () {
     const box = document.getElementById('comprehensiveChart').closest('.report-chart-box');
