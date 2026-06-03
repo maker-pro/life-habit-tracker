@@ -107,37 +107,6 @@
     </div>
 </div>
 
-<div class="layui-card">
-    <div class="layui-card-header">每日报告明细</div>
-    <div class="layui-card-body">
-        <table class="layui-table" lay-size="lg">
-            <thead>
-            <tr>
-                <th>日期</th>
-                <th>睡眠</th>
-                <th>通勤</th>
-                <th>运动/游戏</th>
-                <th>体重/状态</th>
-                <th>健康评分</th>
-                <th>每日总结</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach ($report['rows'] as $row)
-                <tr>
-                    <td>{{ $row['date'] }}</td>
-                    <td>{{ $row['sleep_hours'] }}小时</td>
-                    <td>{{ $row['commute_minutes'] }}分钟</td>
-                    <td>运动{{ $row['exercise_minutes'] }}分钟 / 游戏{{ $row['game_minutes'] }}分钟</td>
-                    <td>{{ $row['weight'] ? $row['weight'].'kg' : '-' }} / {{ $row['mood_level'] ?: '-' }}</td>
-                    <td>{{ $row['health_score'] }}</td>
-                    <td>{{ $row['analysis_text'] }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
