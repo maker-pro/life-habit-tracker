@@ -254,6 +254,7 @@ charts.forEach(function (chart) {
                     grid: { drawOnChartArea: !hasDurationAxis },
                     ticks: {
                         font: { size: 13 },
+                        stepSize: 1,
                         callback: function (value) {
                             return formatClock(value);
                         }

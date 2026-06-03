@@ -243,16 +243,19 @@ class HealthAnalysisService
             'summary' => "本周期平均通勤 {$avg} 分钟。通勤超过 90 分钟的日期建议结合备注查看是否由天气、堵车或路线变化导致。",
             'charts' => [
                 [
-                    'id' => 'commuteMinutesChart',
-                    'title' => '每日通勤分钟数',
-                    'type' => 'bar',
+                    'id' => 'commuteTimeChart',
+                    'title' => '上下班出发 / 到达时间',
+                    'type' => 'line',
                     'labels' => $reports->map(fn (DailyHealthReport $report) => $report->report_date->format('m-d'))->values(),
                     'details' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()] ?? [
                         'date' => $report->report_date->toDateString(),
-                        'lines' => ['通勤时间：'.$report->commute_minutes.'分钟', '出发时间：-', '到达时间：-'],
+                        'lines' => ['通勤时间：'.$report->commute_minutes.'分钟', '', '上班【未完成】：出发：- ==> 到达：-', '下班【未完成】：出发：- ==> 到达：-'],
                     ])->values(),
                     'datasets' => [
-                        ['label' => '通勤分钟', 'data' => $reports->pluck('commute_minutes')->values(), 'color' => '#ffb800'],
+                        ['label' => '上班出发', 'data' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()]['work_start_hour'] ?? null)->values(), 'color' => '#f8a1c4', 'axis' => 'clock', 'unit' => '时间'],
+                        ['label' => '上班到达', 'data' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()]['work_end_hour'] ?? null)->values(), 'color' => '#c2185b', 'axis' => 'clock', 'unit' => '时间'],
+                        ['label' => '下班出发', 'data' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()]['off_start_hour'] ?? null)->values(), 'color' => '#9be7c4', 'axis' => 'clock', 'unit' => '时间'],
+                        ['label' => '下班到达', 'data' => $reports->map(fn (DailyHealthReport $report) => $details[$report->report_date->toDateString()]['off_end_hour'] ?? null)->values(), 'color' => '#179b69', 'axis' => 'clock', 'unit' => '时间'],
                     ],
                 ],
             ],
@@ -278,22 +281,43 @@ class HealthAnalysisService
             ->groupBy(fn (Checkin $checkin) => $checkin->checkin_date->toDateString())
             ->map(function (Collection $items, string $date) {
                 $total = (int) $items->sum(fn (Checkin $checkin) => $checkin->duration_minutes ?: 0);
-                $lines = ["通勤时间：{$total}分钟"];
-
-                foreach ($items as $checkin) {
-                    $name = $checkin->habit?->name ?: '通勤';
-                    $startTime = $checkin->start_time ? substr((string) $checkin->start_time, 0, 5) : '-';
-                    $endTime = $checkin->end_time ? substr((string) $checkin->end_time, 0, 5) : '-';
-                    $duration = $checkin->duration_minutes ? $checkin->duration_minutes.'分钟' : '未完成';
-                    $lines[] = "{$name}：出发 {$startTime}，到达 {$endTime}，用时 {$duration}";
-                }
+                $work = $items->first(fn (Checkin $checkin) => str_contains((string) $checkin->habit?->name, '上班'));
+                $off = $items->first(fn (Checkin $checkin) => str_contains((string) $checkin->habit?->name, '下班'));
+                $lines = [
+                    "通勤时间：{$total}分钟",
+                    '',
+                    $this->commuteLine('上班', $work),
+                    $this->commuteLine('下班', $off),
+                ];
 
                 return [
                     'date' => $date,
                     'lines' => $lines,
+                    'work_start_hour' => $this->checkinTimeToHour($work?->start_time),
+                    'work_end_hour' => $this->checkinTimeToHour($work?->end_time),
+                    'off_start_hour' => $this->checkinTimeToHour($off?->start_time),
+                    'off_end_hour' => $this->checkinTimeToHour($off?->end_time),
                 ];
             })
             ->all();
+    }
+
+    private function commuteLine(string $label, ?Checkin $checkin): string
+    {
+        if (! $checkin) {
+            return "{$label}【未完成】：出发：- ==> 到达：-";
+        }
+
+        $duration = $checkin->duration_minutes ? $checkin->duration_minutes.'分钟' : '未完成';
+        $start = $checkin->start_time ? $checkin->checkin_date->toDateString().' '.substr((string) $checkin->start_time, 0, 5) : '-';
+        $end = $checkin->end_time ? $checkin->checkin_date->toDateString().' '.substr((string) $checkin->end_time, 0, 5) : '-';
+
+        return "{$label}【{$duration}】：出发：{$start} ==> 到达：{$end}";
+    }
+
+    private function checkinTimeToHour(mixed $time): ?float
+    {
+        return $time ? $this->timeToHour((string) $time) : null;
     }
 
     private function sleepDetail(DailyHealthReport $report): array
