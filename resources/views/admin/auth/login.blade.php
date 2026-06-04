@@ -12,18 +12,18 @@
     <section class="layui-card login-card">
         <div class="layui-card-header">生活习惯打卡后台</div>
         <div class="layui-card-body">
-            <form class="layui-form" method="POST" action="{{ route('admin.login.submit') }}">
+            <form class="layui-form" method="POST" action="{{ route('admin.login.submit') }}" autocomplete="off">
                 @csrf
                 <div class="layui-form-item">
                     <label class="layui-form-label">邮箱</label>
                     <div class="layui-input-block">
-                        <input class="layui-input" type="email" name="email" value="{{ old('email', 'admin@example.com') }}" lay-verify="required|email" autocomplete="email">
+                        <input class="layui-input" type="email" name="email" value="{{ old('email') }}" lay-verify="required|email" autocomplete="off">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">密码</label>
                     <div class="layui-input-block">
-                        <input class="layui-input" type="password" name="password" lay-verify="required" autocomplete="current-password">
+                        <input class="layui-input" type="password" name="password" lay-verify="required" autocomplete="off">
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -36,7 +36,6 @@
                 @endif
                 <button class="layui-btn layui-btn-fluid" lay-submit type="submit">登录后台</button>
             </form>
-            <p class="login-tip">默认账号：admin@example.com，默认密码：admin123456</p>
         </div>
     </section>
 </main>

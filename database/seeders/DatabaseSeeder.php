@@ -32,13 +32,21 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
+        $admin = User::where('email', '2813941766@qq.com')
+            ->first() ?: User::where('email', 'admin@example.com')->first();
+
+        if ($admin) {
+            $admin->forceFill([
                 'name' => '系统管理员',
+                'email' => '2813941766@qq.com',
+            ])->save();
+        } else {
+            User::create([
+                'name' => '系统管理员',
+                'email' => '2813941766@qq.com',
                 'password' => Hash::make('admin123456'),
-            ]
-        );
+            ]);
+        }
 
         AppSetting::updateOrCreate(['setting_key' => 'app_name'], ['setting_value' => '生活习惯打卡统计系统']);
         AppSetting::updateOrCreate(['setting_key' => 'api_base_url'], ['setting_value' => 'http://localhost:8000/api']);

@@ -38,6 +38,7 @@
             <div class="header-actions">
                 @auth
                     <span class="admin-user">{{ auth()->user()->name }}</span>
+                    <a class="layui-btn layui-btn-primary" href="{{ route('admin.password.edit') }}">修改密码</a>
                     <form class="inline-form" method="POST" action="{{ route('admin.logout') }}">
                         @csrf
                         <button class="layui-btn layui-btn-primary layui-border-red" type="submit">退出登录</button>

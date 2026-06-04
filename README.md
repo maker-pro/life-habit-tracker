@@ -3,8 +3,8 @@
 基于 Laravel 12、PHP 8.2+、MySQL 8、Redis、Layui、Blade、Chart.js 和 Flutter 的生活习惯打卡统计系统。
 
 后台地址：`/admin`
-默认账号：`admin@example.com`
-默认密码：`admin123456`
+默认账号：`2813941766@qq.com`
+首次部署后请立即在后台修改密码。
 
 ## 功能
 
